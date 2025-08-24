@@ -1,9 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { PricingGrid } from "@/components/PricingGrid";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TypewriterInline } from "@/components/TypewriterInline";
+import { PricingSection } from "@/components/PricingSection";
+import { RotatingTypewriter } from "@/components/RotatingTypewriter";
+import CtaFaqSection from "@/components/CtaFaqSection";
+
 import {
   Card,
   CardContent,
@@ -30,7 +36,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-// Your components (Aceternity-style)
+// Your Aceternity navbar + extras
 import {
   Navbar,
   NavBody,
@@ -52,11 +58,6 @@ const Bg = ({ children }: { children: React.ReactNode }) => (
     <div
       aria-hidden
       className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(hsl(var(--foreground)/0.06)_1px,transparent_1px)] [background-size:16px_16px]"
-    />
-    {/* soft aurora spotlight */}
-    <div
-      aria-hidden
-      className="pointer-events-none absolute -top-40 left-1/2 h-[700px] w-[1100px] -translate-x-1/2 rounded-full bg-[conic-gradient(from_180deg,theme(colors.primary/0.10),transparent_35%)] blur-3xl"
     />
     {children}
   </div>
@@ -93,13 +94,13 @@ function Typewriter({ text, speed = 24 }: { text: string; speed?: number }) {
   );
 }
 
-// Subtle primary button with tasteful glow (no heavy blob)
+// Subtle primary button (no heavy glow)
 function PrimaryButton({ href, children, size = "default" }: { href: string; children: React.ReactNode; size?: "default" | "sm" | "lg" }) {
   const sizing = size === "lg" ? "px-5 py-3 text-base" : size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2";
   return (
-    <a href={href} className={`relative inline-flex items-center justify-center rounded-xl ${sizing} font-medium text-white`}> 
-      <span className="absolute -inset-px rounded-xl bg-gradient-to-b from-foreground/15 to-foreground/10" />
-      <span className="relative z-10 rounded-[10px] bg-foreground px-4 py-2 shadow-[0_10px_30px_rgba(2,6,23,0.20)] ring-1 ring-black/10">
+    <a href={href} className={`relative inline-flex items-center justify-center rounded-xl ${sizing} font-medium text-white`}>
+      <span className="absolute -inset-px rounded-xl bg-gradient-to-b from-foreground/12 to-foreground/8" />
+      <span className="relative z-10 rounded-[10px] bg-foreground px-4 py-2 shadow-[0_10px_30px_rgba(2,6,23,0.18)] ring-1 ring-black/10">
         {children}
       </span>
     </a>
@@ -107,7 +108,7 @@ function PrimaryButton({ href, children, size = "default" }: { href: string; chi
 }
 
 export default function LandingPage() {
-  // Smooth scroll on anchor clicks
+  // Smooth scroll for all anchors
   useEffect(() => {
     document.documentElement.classList.add("scroll-smooth");
     return () => document.documentElement.classList.remove("scroll-smooth");
@@ -119,10 +120,12 @@ export default function LandingPage() {
     { name: "Contact", link: "#contact" },
   ];
 
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
   return (
     <Bg>
-      {/* Navbar (Aceternity resizable) */}
-      <header className="sticky top-0 z-40 border-b bg-background/70 backdrop-blur">
+      {/* Navbar */}
+      <header className="sticky top-0 z-50 isolate border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="container mx-auto px-4">
           <Navbar>
             <NavBody>
@@ -138,26 +141,30 @@ export default function LandingPage() {
                     <Github className="h-5 w-5" />
                   </a>
                 </Button>
-                <NavbarButton variant="primary">
-                  <a href="/compress">Try it</a>
-                </NavbarButton>
+                {/* NavbarButton already renders an <a>. Pass href, do not nest anchors. */}
+                <NavbarButton variant="primary" href="/compress">Try it</NavbarButton>
               </div>
             </NavBody>
 
             <MobileNav>
               <MobileNavHeader>
                 <NavbarLogo />
-                <MobileNavToggle isOpen={false} onClick={() => {}} />
+                <MobileNavToggle isOpen={isMobileOpen} onClick={() => setIsMobileOpen((v) => !v)} />
               </MobileNavHeader>
-              <MobileNavMenu isOpen={false} onClose={() => {}}>
+              <MobileNavMenu isOpen={isMobileOpen} onClose={() => setIsMobileOpen(false)}>
                 {navItems.map((item, idx) => (
-                  <a key={`mobile-link-${idx}`} href={item.link} className="relative text-neutral-600 dark:text-neutral-300">
+                  <a
+                    key={`mobile-link-${idx}`}
+                    href={item.link}
+                    onClick={() => setIsMobileOpen(false)}
+                    className="relative text-neutral-600 dark:text-neutral-300"
+                  >
                     <span className="block">{item.name}</span>
                   </a>
                 ))}
                 <div className="flex w-full flex-col gap-4">
-                  <NavbarButton variant="primary" className="w-full">
-                    <a href="/compress">Try it</a>
+                  <NavbarButton onClick={() => setIsMobileOpen(false)} variant="primary" href="/compress" className="w-full">
+                    Try it
                   </NavbarButton>
                 </div>
               </MobileNavMenu>
@@ -167,33 +174,51 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="container mx-auto px-4 pt-12 pb-8 md:pt-20 md:pb-14">
+      <section className="relative container mx-auto px-4 pt-12 pb-8 md:pt-20 md:pb-14">
+        {/* keep the aurora inside the hero, not behind the header */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(60%_50%_at_30%_40%,black,transparent)] bg-[conic-gradient(from_180deg,theme(colors.primary/0.10),transparent_35%)] blur-3xl" />
+
         <div className="grid items-center gap-10 md:grid-cols-2">
           <Reveal>
-            <div>
-              <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">
-                <span>Compress PDFs to under </span>
-                <span className="bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">2 MB</span>
-                <Typewriter text={". Instantly."} speed={36} />
-              </motion.h1>
-              <p className="mt-4 max-w-prose text-muted-foreground">
-                Drag and drop a file. Pick a 2 / 4 / 6 MB preset. Get a clean result that works for email and government portals. Processing can run in the browser.
-              </p>
-              <div className="mt-7 flex flex-wrap items-center gap-4">
-                <PrimaryButton size="lg" href="/compress">Upload PDF</PrimaryButton>
-                <Button size="lg" variant="secondary" asChild>
-                  <a href="#features">See features</a>
-                </Button>
-              </div>
-              <div className="mt-6 flex items-center gap-3 text-xs text-muted-foreground">
-                <ShieldCheck className="h-4 w-4" /> In-browser option. Keep docs local.
-              </div>
-            </div>
-          </Reveal>
+  <div>
+   <motion.h1
+  initial={{ opacity: 0, y: 8 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5 }}
+  className="text-4xl font-extrabold leading-tight tracking-tight md:text-6xl"
+>
+  <span>Compress PDFs to under </span>
+  <span className="bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+    2 MB
+  </span>
+  <RotatingTypewriter
+    words={["Instantly", "Fast", "Private", "Clean"]}
+    className="text-foreground"
+  />
+</motion.h1>
+
+    <p className="mt-4 max-w-prose text-muted-foreground">
+      Drag and drop a file. Pick a 2 / 4 / 6 MB preset. Get a clean result that works
+      for email and government portals. Processing can run in the browser.
+    </p>
+
+    <div className="mt-7 flex flex-wrap items-center gap-4">
+      <PrimaryButton size="lg" href="/compress">Upload PDF</PrimaryButton>
+      <Button size="lg" variant="secondary" asChild>
+        <a href="#features">See features</a>
+      </Button>
+    </div>
+
+    <div className="mt-6 flex items-center gap-3 text-xs text-muted-foreground">
+      <ShieldCheck className="h-4 w-4" /> In-browser option. Keep docs local.
+    </div>
+  </div>
+</Reveal>
+
 
           {/* File upload animation block */}
           <Reveal delay={0.1}>
-            <Card className="mx-auto max-w-md border-0 shadow-xl ring-1 ring-black/5">
+            <Card className="z-0 mx-auto max-w-md border-0 shadow-xl ring-1 ring-black/5">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Drag and drop</CardTitle>
                 <CardDescription>Target: 2 MB preset</CardDescription>
@@ -262,81 +287,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="scroll-mt-24 container mx-auto px-4 pb-12 md:pb-16">
-        <Reveal>
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Simple pricing</h2>
-            <p className="mt-2 text-muted-foreground">Start free. Upgrade when you need more.</p>
-          </div>
-        </Reveal>
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          <PriceCard name="Free" price="$0" cta="Try now" features={["Basic compression", "2/4/6 MB presets", "In-browser option"]} />
-          <PriceCard name="Pro" price="$5/mo" cta="Go Pro" features={["Batch files", "Priority processing", "Share links"]} highlight />
-          <PriceCard name="Team" price="$15/mo" cta="Contact sales" features={["Team seats", "Admin controls", "Usage analytics"]} />
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="container mx-auto px-4 pb-12 md:pb-16">
-        <Card className="mx-auto max-w-4xl">
-          <CardHeader>
-            <CardTitle className="text-center">Ready to compress a file?</CardTitle>
-            <CardDescription className="text-center">No account needed for basic use.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center gap-4">
-            <PrimaryButton size="lg" href="/compress">Open the compressor</PrimaryButton>
-            <Button size="lg" variant="secondary" asChild>
-              <a href="#faq">Read the FAQ</a>
-            </Button>
-          </CardContent>
-        </Card>
-      </section>
+        <PricingSection />
 
       {/* FAQ */}
-      <section id="faq" className="scroll-mt-24 container mx-auto px-4 pb-20">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">FAQ</h2>
-          <p className="mt-2 text-muted-foreground">Short and useful answers.</p>
-        </div>
-        <div className="mx-auto mt-6 max-w-3xl">
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="q1">
-              <AccordionTrigger>Do you upload my files?</AccordionTrigger>
-              <AccordionContent>
-                You can run fully in the browser so files never leave your machine. If you choose server mode, we delete temporary files after processing. Configure this in settings when you add real backend logic.
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="q2">
-              <AccordionTrigger>Will it pass government portal limits?</AccordionTrigger>
-              <AccordionContent>
-                The 2 MB preset is designed for common e‑file portals. Always verify the exact limit for your region before submitting any official document.
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="q3">
-              <AccordionTrigger>Is text still searchable?</AccordionTrigger>
-              <AccordionContent>
-                Yes when the original contains text layers. Image‑only scans may need OCR, which you can add as a future feature.
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      </section>
+      <CtaFaqSection />
 
-      {/* Contact anchor for navbar */}
-      <section id="contact" className="scroll-mt-24 container mx-auto px-4 pb-12">
-        <Card className="mx-auto max-w-3xl">
-          <CardHeader>
-            <CardTitle>Contact</CardTitle>
-            <CardDescription>Questions or feedback? Drop a note.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Add your contact form or email here.
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Sticky bottom bar on mobile */}
+      {/* Mobile sticky CTA */}
       <div className="fixed inset-x-0 bottom-3 z-40 mx-auto w-full max-w-lg px-4 md:hidden">
         <div className="rounded-2xl border bg-background/80 p-2 backdrop-blur">
           <div className="flex items-center justify-between gap-3">
